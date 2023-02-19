@@ -19,10 +19,21 @@ class HrLoan(models.Model):
         else:
             ts_user_id = self.env.context.get('user_id', self.env.user.id)
         result['employee_id'] = self.env['hr.employee'].search([('user_id', '=', ts_user_id)], limit=1).id
+
         return result
+
+    @api.onchange('employee_id')
+    def onchange_employee(self):
+        if not self.employee_id:
+            return
+
+        employee = self.employee_id
+        self.company_id = self.env['res.company'].search([('id', '=', employee.company_id.id)], limit=1)
 
     def _compute_loan_amount(self):
         total_paid = 0.0
+        self.name = self.name or self.env['ir.sequence'].next_by_code('hr.loan.seq')
+
         for loan in self:
             for line in loan.loan_lines:
                 if line.paid:
@@ -32,7 +43,7 @@ class HrLoan(models.Model):
             loan.balance_amount = balance_amount
             loan.total_paid_amount = total_paid
 
-    name = fields.Char(string="Loan Name", default="/", readonly=True, help="Name of the loan")
+    name = fields.Char(string="Loan Name", readonly=True, help="Name of the loan")
     date = fields.Date(string="Date", default=fields.Date.today(), readonly=True, help="Date")
     employee_id = fields.Many2one('hr.employee', string="Employee", required=True, help="Employee")
     department_id = fields.Many2one('hr.department', related="employee_id.department_id", readonly=True,
@@ -72,7 +83,11 @@ class HrLoan(models.Model):
         if loan_count:
             raise ValidationError(_("The employee has already a pending installment"))
         else:
-            values['name'] = self.env['ir.sequence'].get('hr.loan.seq') or ' '
+            #values['name'] = self.env['ir.sequence'].get('hr.loan.seq') or ' '
+            #number = payslip.number or self.env["ir.sequence"].next_by_code(
+            #    "salary.slip"
+            #)
+            values['name'] = False
             res = super(HrLoan, self).create(values)
             return res
 
