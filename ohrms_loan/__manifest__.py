@@ -33,7 +33,7 @@
     'live_test_url': 'https://youtu.be/lAT5cqVZTZI',
     'website': "https://www.openhrms.com",
     'depends': [
-        'base', 'hr', 'payroll', 'l10n_bs_hr_payroll_fuelboss',
+        'base', 'hr', 'payroll'
     ],
     'data': [
         'security/ir.model.access.csv',
